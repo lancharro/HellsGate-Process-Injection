@@ -11,4 +11,4 @@ Shellcode can be executed by using the following techniques:
 - Process injection to a defined PID
 - Process injection to the first process with a defined name
 
-The code also includes hooking detection and simple unhooking capabilities to bypass AV or EDR.
+The code also includes hooking detection and simple unhooking capabilities by restoring the expected systemcall ID to bypass AV or EDR.
